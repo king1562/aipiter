@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import random
 import time
 
-url = 'https://www.genie.co.kr/chart/top200'
+url = 'https://music.apple.com/kr/playlist/%EC%98%A4%EB%8A%98%EC%9D%98-top-100-%EA%B8%80%EB%A1%9C%EB%B2%8C/pl.d25f5d1181894928af76c85c967f8f31'
 headers = {
     'User-Agent': 'Mozilla/5.0'
 }
