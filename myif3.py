@@ -39,13 +39,13 @@ def loading_animation(text, duration=1):
 def print_logo():
     logo = f"""
 {Colors.CYAN}╔════════════════════════════════════════════════╗
-║                                                ║
+║                                                                          ║
 ║   {Colors.YELLOW}█▀█ █▀█ █▀█ █   █▀▀   █▀▄▀█ █ █ █▀ █ █▀▀   {Colors.CYAN}║
 ║   {Colors.YELLOW}█▀█ █▀▀ █▀▀ █   █▀▀   █ ▀ █ █▄█ ▄█ █ █     {Colors.CYAN}║
 ║   {Colors.YELLOW}▀ ▀ ▀   ▀   ▀▀▀ ▀▀▀   ▀   ▀ ▀ ▀ ▀▀ ▀ ▀▀▀   {Colors.CYAN}║
-║                                                ║
+║                    apple music what the                                  ║
 ║   {Colors.WHITE}★ 빅데이터 음악 차트 분석 & 추천 시스템 ★     {Colors.CYAN}║
-║                                                ║
+║                                                                          ║
 ╚════════════════════════════════════════════════╝{Colors.RESET}"""
     print(logo)
 
@@ -290,7 +290,7 @@ def ai_music_recommendation(song_list):
     ]
     
     print(f"\n{Colors.GREEN}추천 이유: {random.choice(reasons)}{Colors.RESET}")
-    
+    x``
     # 추가 추천곡 출력
     print(f"\n{Colors.BOLD}{Colors.BLUE}▶ 함께 들으면 좋은 곡:{Colors.RESET}")
     for i, song in enumerate(additional_songs, 1):
