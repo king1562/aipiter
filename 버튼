@@ -1,0 +1,287 @@
+import requests
+import json
+from datetime import datetime, timedelta
+import time
+
+class SimpleStockAnalyzer:
+    def __init__(self):
+        """간단한 주식 분석 시스템 (외부 라이브러리 최소화)"""
+        self.sp500_companies = {
+            'AAPL': {'name': 'Apple Inc.', 'sector': 'Technology'},
+            'MSFT': {'name': 'Microsoft Corporation', 'sector': 'Technology'}, 
+            'NVDA': {'name': 'NVIDIA Corporation', 'sector': 'Technology'},
+            'AMZN': {'name': 'Amazon.com Inc.', 'sector': 'Consumer Discretionary'},
+            'GOOGL': {'name': 'Alphabet Inc.', 'sector': 'Technology'},
+            'META': {'name': 'Meta Platforms Inc.', 'sector': 'Technology'},
+            'TSLA': {'name': 'Tesla Inc.', 'sector': 'Consumer Discretionary'},
+            'JPM': {'name': 'JPMorgan Chase & Co.', 'sector': 'Financial Services'},
+            'JNJ': {'name': 'Johnson & Johnson', 'sector': 'Healthcare'},
+            'V': {'name': 'Visa Inc.', 'sector': 'Financial Services'},
+            'PG': {'name': 'Procter & Gamble Co.', 'sector': 'Consumer Staples'},
+            'UNH': {'name': 'UnitedHealth Group Inc.', 'sector': 'Healthcare'},
+            'HD': {'name': 'Home Depot Inc.', 'sector': 'Consumer Discretionary'},
+            'PLTR': {'name': 'Palantir Technologies Inc.', 'sector': 'Technology'}
+        }
+        
+        # 모의 데이터 (실제 API 대신 사용)
+        self.mock_data = self.generate_mock_data()
+    
+    def generate_mock_data(self):
+        """모의 주식 데이터 생성"""
+        import random
+        
+        mock_data = {}
+        base_prices = {
+            'AAPL': 199.20, 'MSFT': 450.00, 'NVDA': 145.00, 'AMZN': 185.00,
+            'GOOGL': 175.00, 'META': 520.00, 'TSLA': 250.00, 'JPM': 210.00,
+            'JNJ': 160.00, 'V': 280.00, 'PG': 165.00, 'UNH': 590.00,
+            'HD': 390.00, 'PLTR': 135.19
+        }
+        
+        for symbol, info in self.sp500_companies.items():
+            base_price = base_prices.get(symbol, 100.00)
+            change_pct = random.uniform(-5.0, 8.0)  # -5% ~ +8% 변동
+            current_price = base_price * (1 + change_pct/100)
+            
+            mock_data[symbol] = {
+                'name': info['name'],
+                'sector': info['sector'],
+                'current_price': round(current_price, 2),
+                'change_pct': round(change_pct, 2),
+                'volume': random.randint(1000000, 50000000),
+                'market_cap': random.randint(100, 3000) * 1e9,
+                'pe_ratio': round(random.uniform(15, 45), 1),
+                'dividend_yield': round(random.uniform(0, 4), 2),
+                'beta': round(random.uniform(0.5, 2.0), 2),
+                'recommendation': random.choice(['BUY', 'HOLD', 'SELL', 'STRONG_BUY'])
+            }
+        
+        return mock_data
+    
+    def display_stock_data(self):
+        """주식 데이터 표시"""
+        print("📊 S&P 500 주요 종목 현황")
+        print("=" * 100)
+        print(f"{'종목':^8} {'회사명':^25} {'현재가':^10} {'등락률':^8} {'섹터':^20} {'추천':^10}")
+        print("-" * 100)
+        
+        for symbol, data in self.mock_data.items():
+            color = "🟢" if data['change_pct'] > 0 else "🔴" if data['change_pct'] < 0 else "⚪"
+            print(f"{symbol:^8} {data['name'][:23]:^25} ${data['current_price']:^8.2f} "
+                  f"{color}{data['change_pct']:^6.2f}% {data['sector'][:18]:^20} {data['recommendation']:^10}")
+    
+    def analyze_top_performers(self, top_n=5):
+        """상위 성과 종목 분석"""
+        # 등락률 기준 정렬
+        sorted_stocks = sorted(self.mock_data.items(), 
+                             key=lambda x: x[1]['change_pct'], reverse=True)
+        
+        print(f"\n🏆 상위 {top_n}개 성과 종목")
+        print("=" * 80)
+        
+        for i, (symbol, data) in enumerate(sorted_stocks[:top_n], 1):
+            print(f"{i}. {symbol} - {data['name']}")
+            print(f"   💰 현재가: ${data['current_price']:,.2f}")
+            print(f"   📈 등락률: {data['change_pct']:+.2f}%")
+            print(f"   🏢 섹터: {data['sector']}")
+            print(f"   📊 베타: {data['beta']}")
+            print(f"   🎯 추천: {data['recommendation']}")
+            print(f"   💹 시가총액: ${data['market_cap']/1e9:.1f}B")
+            print("-" * 50)
+        
+        return sorted_stocks[:top_n]
+    
+    def sector_analysis(self):
+        """섹터별 분석"""
+        sectors = {}
+        
+        for symbol, data in self.mock_data.items():
+            sector = data['sector']
+            if sector not in sectors:
+                sectors[sector] = {'stocks': [], 'total_change': 0, 'count': 0, 'total_cap': 0}
+            
+            sectors[sector]['stocks'].append(symbol)
+            sectors[sector]['total_change'] += data['change_pct']
+            sectors[sector]['count'] += 1
+            sectors[sector]['total_cap'] += data['market_cap']
+        
+        print(f"\n🏭 섹터별 성과 분석")
+        print("=" * 80)
+        
+        for sector, info in sectors.items():
+            avg_change = info['total_change'] / info['count']
+            total_cap = info['total_cap'] / 1e12  # 조 달러 단위
+            
+            print(f"📋 {sector}")
+            print(f"   📈 평균 등락률: {avg_change:+.2f}%")
+            print(f"   🏢 종목 수: {info['count']}개")
+            print(f"   💰 총 시가총액: ${total_cap:.2f}T")
+            print(f"   🎯 대표 종목: {', '.join(info['stocks'][:3])}")
+            print("-" * 50)
+        
+        return sectors
+    
+    def investment_recommendation(self, amount=100000, risk_profile='moderate'):
+        """투자 추천"""
+        print(f"\n🎯 투자 추천 (${amount:,}, {risk_profile} 성향)")
+        print("=" * 80)
+        
+        # 위험성향별 필터링
+        candidates = []
+        
+        for symbol, data in self.mock_data.items():
+            score = 0
+            
+            if risk_profile == 'aggressive':
+                # 고위험 고수익: 높은 베타, 기술주 선호
+                if data['beta'] > 1.5: score += 3
+                if data['sector'] == 'Technology': score += 2
+                if data['change_pct'] > 3: score += 2
+                
+            elif risk_profile == 'conservative':
+                # 저위험 안정형: 낮은 베타, 배당 선호
+                if data['beta'] < 1.0: score += 3
+                if data['dividend_yield'] > 2: score += 2
+                if data['sector'] in ['Healthcare', 'Consumer Staples']: score += 2
+                
+            else:  # moderate
+                # 균형형: 적당한 위험, 섹터 분산
+                if 1.0 <= data['beta'] <= 1.5: score += 2
+                if data['pe_ratio'] < 30: score += 1
+                if data['recommendation'] in ['BUY', 'STRONG_BUY']: score += 2
+            
+            candidates.append((symbol, data, score))
+        
+        # 점수 순으로 정렬
+        candidates.sort(key=lambda x: x[2], reverse=True)
+        
+        # 상위 5개 종목으로 포트폴리오 구성
+        allocation_pct = [0.3, 0.25, 0.2, 0.15, 0.1]
+        portfolio = {}
+        
+        print("📋 추천 포트폴리오:")
+        
+        for i, (symbol, data, score) in enumerate(candidates[:5]):
+            allocation = allocation_pct[i] if i < len(allocation_pct) else 0.1
+            investment_value = amount * allocation
+            shares = int(investment_value / data['current_price'])
+            actual_investment = shares * data['current_price']
+            
+            portfolio[symbol] = {
+                'shares': shares,
+                'investment': actual_investment,
+                'allocation': allocation * 100
+            }
+            
+            print(f"\n{i+1}. {symbol} - {data['name']}")
+            print(f"   💰 투자금액: ${actual_investment:,.2f} ({allocation*100:.1f}%)")
+            print(f"   📊 주식 수: {shares:,}주")
+            print(f"   💵 주가: ${data['current_price']:,.2f}")
+            print(f"   📈 등락률: {data['change_pct']:+.2f}%")
+            print(f"   🏢 섹터: {data['sector']}")
+            print(f"   🎯 점수: {score}점")
+        
+        total_invested = sum(p['investment'] for p in portfolio.values())
+        cash_remaining = amount - total_invested
+        
+        print(f"\n💰 총 투자금액: ${total_invested:,.2f}")
+        print(f"💵 여유 현금: ${cash_remaining:,.2f}")
+        
+        return portfolio
+    
+    def market_summary(self):
+        """시장 전체 요약"""
+        total_stocks = len(self.mock_data)
+        positive_stocks = sum(1 for data in self.mock_data.values() if data['change_pct'] > 0)
+        negative_stocks = sum(1 for data in self.mock_data.values() if data['change_pct'] < 0)
+        
+        avg_change = sum(data['change_pct'] for data in self.mock_data.values()) / total_stocks
+        total_market_cap = sum(data['market_cap'] for data in self.mock_data.values())
+        
+        print(f"\n📊 시장 전체 요약")
+        print("=" * 50)
+        print(f"📈 상승 종목: {positive_stocks}개 ({positive_stocks/total_stocks*100:.1f}%)")
+        print(f"📉 하락 종목: {negative_stocks}개 ({negative_stocks/total_stocks*100:.1f}%)")
+        print(f"📊 평균 등락률: {avg_change:+.2f}%")
+        print(f"💰 총 시가총액: ${total_market_cap/1e12:.2f}T")
+        
+        # 섹터별 요약
+        sectors = {}
+        for data in self.mock_data.values():
+            sector = data['sector']
+            if sector not in sectors:
+                sectors[sector] = 0
+            sectors[sector] += 1
+        
+        print(f"\n🏭 섹터별 종목 수:")
+        for sector, count in sectors.items():
+            print(f"   {sector}: {count}개")
+    
+    def run_analysis(self):
+        """전체 분석 실행"""
+        try:
+            print("🚀 S&P 500 빅데이터 분석 시작")
+            print(f"⏰ 분석 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            print("=" * 100)
+            
+            # 1. 전체 데이터 표시
+            self.display_stock_data()
+            
+            # 2. 시장 요약
+            self.market_summary()
+            
+            # 3. 상위 성과 종목
+            self.analyze_top_performers()
+            
+            # 4. 섹터 분석
+            self.sector_analysis()
+            
+            # 5. 투자 추천 (3가지 유형)
+            self.investment_recommendation(100000, 'aggressive')
+            self.investment_recommendation(100000, 'moderate')
+            self.investment_recommendation(100000, 'conservative')
+            
+            print(f"\n✅ 분석 완료!")
+            print("=" * 100)
+            
+        except Exception as e:
+            print(f"❌ 분석 중 오류 발생: {e}")
+
+# 메인 실행
+if __name__ == "__main__":
+    print("🎯 S&P 500 빅데이터 분석 시스템")
+    print("1. 전체 분석 실행")
+    print("2. 상위 성과 종목만")
+    print("3. 섹터 분석만") 
+    print("4. 투자 추천만")
+    
+    try:
+        choice = input("선택하세요 (1-4): ").strip()
+        
+        analyzer = SimpleStockAnalyzer()
+        
+        if choice == "1":
+            analyzer.run_analysis()
+        elif choice == "2":
+            analyzer.display_stock_data()
+            analyzer.analyze_top_performers()
+        elif choice == "3":
+            analyzer.sector_analysis()
+        elif choice == "4":
+            risk = input("위험성향 (aggressive/moderate/conservative): ").strip()
+            if risk not in ['aggressive', 'moderate', 'conservative']:
+                risk = 'moderate'
+            
+            try:
+                amount = int(input("투자금액 ($): ") or 100000)
+            except:
+                amount = 100000
+                
+            analyzer.investment_recommendation(amount, risk)
+        else:
+            print("❌ 잘못된 선택입니다.")
+            
+    except KeyboardInterrupt:
+        print("\n👋 프로그램을 종료합니다.")
+    except Exception as e:
+        print(f"❌ 오류 발생: {e}")
